@@ -1,39 +1,43 @@
 #!/bin/sh
-cd "${0%/*}" || exit                                # Run from this directory
-. ${WM_PROJECT_DIR:?}/bin/tools/RunFunctions        # Tutorial run functions
-#------------------------------------------------------------------------------
+
+# Determine OpenFOAM version
+OF_MAJOR=`echo $WM_PROJECT_VERSION | cut -d'.' -f1`
+OF_MINOR=`echo $WM_PROJECT_VERSION | cut -d'.' -f2`
+
+# Set variable to distinguish between OF 2.2 and older versions
+if [ $OF_MAJOR -le 2 -a $OF_MINOR -le 1 ]; then
+  OLD=1
+else
+  OLD=0
+fi
 
 # Make 3D mesh in slab of cells.
-(
-    cd wingMotion_snappyHexMesh || exit
+cd airfoil_snappyHexMesh
+blockMesh > output/1-blockMesh.log 2>&1
 
-    runApplication blockMesh
-    runApplication snappyHexMesh -overwrite
-)
+if [ $OLD -eq "1" ]; then
+  surfaceFeatureExtract -includedAngle 150 -writeObj constant/triSurface/airfoil.stl airfoil > output/2-surfaceFeatureExtract.log 2>&1
+else
+  surfaceFeatureExtract > output/2-surfaceFeatureExtract.log 2>&1
+fi
+
+snappyHexMesh -overwrite > output/3-snappyHexMesh.log 2>&1
+rm -f 0/*
+
 
 # Make a 2D mesh by extruding a patch and solve to steady state.
-(
-    cd wingMotion2D_simpleFoam || exit
+cd ../airfoil_simpleFoam
+extrudeMesh > output/1-extrudeMesh.log 2>&1
+rm -f 0/*
+cp 0.org/* 0/
+simpleFoam > output/2-simpleFoam.log 2>&1
 
-    runApplication extrudeMesh
-    runApplication createPatch -overwrite
-    restore0Dir
-    runApplication simpleFoam
-)
+if [ $OLD -eq "1" ]; then
+  ./liftDrag-2.1.plot
+else
+  ./liftDrag.plot
+fi
 
-# Copy mesh from the steady state case, map the results to a mesh motion case,
-# then solve transient.
-(
-    cd wingMotion2D_pimpleFoam || exit
 
-    rm -rf constant/polyMesh
-    \cp -r ../wingMotion2D_simpleFoam/constant/polyMesh constant
-    restore0Dir
-    runApplication mapFields ../wingMotion2D_simpleFoam -sourceTime latestTime -consistent
-    \mv 0/pointDisplacement.unmapped 0/pointDisplacement
-    runApplication decomposePar
-    runParallel $(getApplication)
-    runApplication reconstructPar
-)
 
-#------------------------------------------------------------------------------
+
