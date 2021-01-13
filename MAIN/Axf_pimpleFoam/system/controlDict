@@ -47,29 +47,122 @@ runTimeModifiable true;
 
 functions
 {
-    fieldAverage1
+    minMax1
     {
-        type            fieldAverage;
-        libs            ("libfieldFunctionObjects.so");
-        writeControl    writeTime;
+        libs            (fieldFunctionObjects);
+        type            fieldMinMax;
+        fields          (U p);
+    }
 
-        fields
+    curleSurface
+    {
+        // Mandatory entries
+        type            Curle;
+        libs            (fieldFunctionObjects);
+        patches         (cylinder);
+        c0              343;
+        input           surface;
+        surface         surface.obj;
+        output          surface;
+        surfaceType     ensight;
+        formatOptions
+        {
+            ensight
+            {
+                format ascii; // needed for surfaceNoise ...
+                collateTimes true;
+            }
+        }
+
+        // Optional (inherited) entries
+        p               p;
+        region          region0;
+        enabled         true;
+        log             true;
+        timeStart       100;
+        timeEnd         1000;
+        executeControl  timeStep;
+        executeInterval 1;
+    }
+    curlePoint
+    {
+        // Mandatory entries
+        type            Curle;
+        libs            (fieldFunctionObjects);
+        patches         (cylinder);
+        c0              343;
+        input           point;
+        output          point;
+        observerPositions
         (
-            U
-            {
-                mean        on;
-                prime2Mean  on;
-                base        time;
-            }
-
-            p
-            {
-                mean        on;
-                prime2Mean  on;
-                base        time;
-            }
+            (0.20 0.17 -0.01) // N
+            (0.22 0.15 -0.01) // E
+            (0.20 0.13 -0.01) // S
+            (0.18 0.15 -0.01) // W
         );
+
+        // Optional (inherited) entries
+        p               p;
+        region          region0;
+        enabled         true;
+        log             true;
+        timeStart       100;
+        timeEnd         1000;
+        executeControl  timeStep;
+        executeInterval 1;
+    }
+
+    cuttingPlane
+    {
+        type            surfaces;
+        libs            (sampling);
+        writeControl    writeTime;
+        timeStart       100;
+
+        surfaceFormat   ensight;
+        formatOptions
+        {
+            ensight
+            {
+                format          binary;
+                collateTimes    true;
+            }
+        }
+        fields          (p U);
+
+        interpolationScheme cellPoint;
+
+        surfaces
+        {
+            zNormal
+            {
+                type            cuttingPlane;
+                planeType       pointAndNormal;
+                pointAndNormalDict
+                {
+                    point           (0 0 -0.01);
+                    normal          (0 0 1);
+                }
+                interpolate     false;
+            }
+        }
+    }
+
+    forces
+    {
+        type            forces;
+        libs            (forces);
+        writeControl    writeTime;
+        timeStart       100;
+
+        patches         (cylinder);
+        CofR            (0.20 0.15 -0.01);
+        writeFields     yes;
+
+        rho             rhoInf;
+        rhoInf          1;
     }
 }
+
 
 // ************************************************************************* //
