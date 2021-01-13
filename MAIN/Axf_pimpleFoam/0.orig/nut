@@ -21,16 +21,36 @@ internalField   uniform 0;
 
 boundaryField
 {
-    wing
+    "airfoil.*"
     {
-        type            nutkWallFunction;
-        value           uniform 0;
+        type            nutLowReWallFunction;
+        value          uniform 0;
     }
 
-    "(front|back|topAndBottom|inlet|outlet)"
+    front
     {
-        type            calculated;
-        value           uniform 0;
+        type            symmetryPlane;
+ 
+    }
+   topAndBottom
+    {
+        type           calculated;
+        value          uniform 0;
+    }
+   inlet
+    {
+        type           calculated;
+        value          uniform 0;
+    }
+   outlet
+    {
+         type           calculated;
+        value          uniform 0;
+    }
+   back
+    {
+        type            symmetryPlane;
+   
     }
 }
 
