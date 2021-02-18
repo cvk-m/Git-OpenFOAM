@@ -1,20 +1,18 @@
 clc
 clear all
-p=[0.0155 0.296632 0.060015 -0.4515 0.296632 -0.06055 0.453 0 0.001260 0 7.36]; %%NACA 0012
-%p=[0.0216 0.3445 0.07912 -0.6448 0.17 -0.033797 0.6748 0 0 0 0];  %%NACA 2411;
-%p=[0.0216 0.3445 0.07912 -0.6448 0.17 -0.033797 0.6748 0 0 0 0]
-Nfoil=100;% number of point to built airfoil base shape
+DM=0; % if 3d mesh =1 ,0 means surface mesh
+Nfoil=200;% number of point to built airfoil base shape
 Nf=Nfoil+1;
 dbeta=1/Nfoil;
-LE=0.15;  %LEADING EDGE MODIFICATION  LENGHT  
-fLl = 20; %frequency
+LE=0.1;  %LEADING EDGE MODIFICATION  LENGHT  
+fLl = 3; %frequency
 Nhp=300; % 3d için katman sayısı
 TP=1;
-AL=3;
+AL=1;
 teta =0; %randi([2 50],1,1)twist
 DA=0;
 SW=0;
-
+Nw=0;
 TE=0;  %TRAILING EDGE MODIFICATION  LENGHT  
 fT=10;
 Rw=0.125;
@@ -60,7 +58,7 @@ break
 end
 nx=nx+1;
 end 
-Nw=0;
+
 
 %Na=101;
 Ns=Na+Nw;%round((AL*Rw)*Na/(AL));
@@ -79,50 +77,9 @@ for i=0:dbeta:1
     beta=beta+dbeta;
     k=k+1;
 end
-%%
-% This function determines a=[a1, a2, ...an] to solve the airfoil polynomial.
-% Zn=an(p)*X^(n-1/2), where n is the number of coordinates for the upper or
-% lower surface.
-% Input is a vector of PARSEC parameters p=[p1, p2, ...pn] where
-% p1=rle        
-% p2=Xup
-% p3=Yup
-% p4=YXXup
-% p5=Xlow
-% p6=Ylow
-% p7=YXXlow
-% p8=yte
-% p9=delta yte (t.e. thickness)
-% p10=alpha te
-% p11=beta te
-%%
-%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%% PARSEC AIRFOL BASE SHAPE
-c1=[1,1,1,1,1,1];
-c2=[p(2)^(1/2),p(2)^(3/2),p(2)^(5/2),p(2)^(7/2),p(2)^(9/2),p(2)^(11/2)];
-c3=[1/2, 3/2, 5/2, 7/2, 9/2, 11/2];
-c4=[(1/2)*p(2)^(-1/2), (3/2)*p(2)^(1/2),(5/2)*p(2)^(3/2),(7/2)...
-    *p(2)^(5/2),(9/2)*p(2)^(7/2),(11/2)*p(2)^(9/2)];
-c5=[(-1/4)*p(2)^(-3/2),(3/4)*p(2)^(-1/2),(15/4)*p(2)^(1/2),(35/4)...
-    *p(2)^(3/2),(53/4)*p(2)^(5/2),(99/4)*p(2)^(7/2)];
-c6=[1,0,0,0,0,0];
-Cup=[c1; c2; c3; c4; c5; c6];
-c7=[1,1,1,1,1,1];
-c8=[p(5)^(1/2),p(5)^(3/2),p(5)^(5/2),p(5)^(7/2),p(5)^(9/2),p(5)^(11/2)];
-c9=[1/2, 3/2, 5/2, 7/2, 9/2, 11/2];
-c10=[(1/2)*p(5)^(-1/2), (3/2)*p(5)^(1/2),(5/2)*p(5)^(3/2),(7/2)...
-    *p(5)^(5/2),(9/2)*p(5)^(7/2),(11/2)*p(5)^(9/2)];
-c11=[(-1/4)*p(5)^(-3/2),(3/4)*p(5)^(-1/2),(15/4)*p(5)^(1/2),(35/4)...
-    *p(5)^(3/2),(53/4)*p(5)^(5/2),(99/4)*p(5)^(7/2)];
-c12=[0,0,0,0,0,1];
-Clo=[c7; c8; c9; c10; c11; c12];
-bup=[p(8)+p(9)/2;p(3);tand(p(10)-p(11)/2);0;p(4);(sqrt(2*p(1)))];
-blo=[p(8)+p(9)/2;p(6);tand(p(10)-p(11)/2);0;p(7);(sqrt(2*p(1)))];
-aup=linsolve(Cup,bup);
-alower=linsolve(Clo,blo);
-a(:,1)=aup;
-a(7:12,1)=alower;
 
-NACA12= 'NACA0012.xlsx';
+
+NACA12= 'NACA0012-201.xlsx';
 NACA0012=xlsread(NACA12);
 x=NACA0012(1,:);
 yufoil=NACA0012(2,:);
@@ -182,9 +139,9 @@ for c=1:Na%NZ-1   %UPPER SURFACE MODIFIED
 stb=LEP(c); %extent max. span of tubcle
 beta=0;
 if stb==0
-for g=1:(Yu-1)
+
    ru(g)=x(g);
-end  
+  
 else
 dbu=(stb+x(Yu-1))/(Yu-2);
 beta=0;
@@ -208,9 +165,9 @@ for c=1:Na %NZ-1
   stb=LEP(c) ;
 beta=0;
 if stb==0
-for g=1:(Yl-1)
+
    rl(g)=x(g);
-end 
+
 else
 dbl=(stb+x(Yl-1))/(Yl-2);
 beta=0;
@@ -223,8 +180,8 @@ rl(Yl-1)=(rl(Yl-1)+x(Yl-1))/2;
 Lxl=[rl,x(1,(Yl):Nf)];
 LXl=cat(2,LXl,Lxl);
 end
-LXl=-(((-LXl(1,1)+LXl(1,Nf))/2)+LXl(1,1))+LXl;
-LXu=-(((-LXu(1,1)+LXu(1,Nf))/2)+LXu(1,1))+LXu;
+%LXl=-(((-LXl(1,1)+LXl(1,Nf))/2)+LXl(1,1))+LXl;
+%LXu=-(((-LXu(1,1)+LXu(1,Nf))/2)+LXu(1,1))+LXu;
 
 %% TRAILING SHARP EDGE
 
@@ -241,37 +198,6 @@ TEP=cat(1,TEP,-zQT);
 zT=cat(1,zT,aa);
 end
 
-
-%sst=0.1
-%beta=0;
-%g=1
-%dbl=pi/((Nfoil*0.25)*2)
-%for i=0:dbl:pi/2
-  % su(g)=((1-cos(beta))*(x(Nfoil+1)-sst-(x(Nfoil*0.75))))+(x(Nfoil*0.75));
-   
-  % beta=beta+dbl;
- %   g=g+1;
-%end
-%xsu=[x(1,1:Nfoil*0.7),su]
-%yxx=a(1)*su.^.5+a(2)*su.^(1.5)+a(3)*su.^(2.5)+a(4)*su.^(3.5)+a(5)*su.^(4.5)+a(6)*su.^(5.5);
-%yuxx=[yufoil(1,1:Nfoil*0.8),yxx]
-%PP=polyfit(x(1,1:169),yufoil(1,1:169),2)
-
-
-%for i=1:1:51
-%YXX (i)= (PP(1)*su(i)^2+PP(2)*su(i)^1+PP(3))
-%end
-%plot(su,YXX,'*')
-%hold on
-%plot(x,yufoil,'*')
-
-%plot(xru,yufoil,'c')
-%hold on
-%plot(xrl,ylfoil,'*')
-%hold on
-%plot(x,yufoil,'*')
-%hold on
-%plot(x,ylfoil,'c')
 %%
   TXu=LXu;
   NN=[];
@@ -281,7 +207,7 @@ end
      for a=(i-1)*Nf+1:1:(Nf*i) 
 if TEP(i)==0
     TXu(a)=TXu(a);
-    NN(i,b)=a;
+    NN(i,b)=0;
   b=b+1;
 elseif LXu(a)>((0.5+LE/2)-TEP(i))
    TXu(a)=((0.5+LE/2)-TEP(i));
@@ -292,26 +218,9 @@ else
 end
      end
  end
- %TXl=LXl;
- %for i=1:Na %NZ-1
- %    for a=(i-1)*Nf+1:1:(Nf*i)
-%if TEP(i)==0
-  %  TXl(a)=TXu(a);
-    TXl=TXu;
-%elseif LXl(a)>((0.5+LE/2)-TEP(i))
-  %TXl(a)=TXu(a);
-    %TXl(a)=((0.5+LE/2)-TEP(i));
-%else
- %   TXl(a)=TXu(a);
-%end
- %    end
-% end
 
- 
-%%PTXu=(find(LXu(((i-1)*(Nfoil+1)+1):i*(Nfoil+1))>0.9))
-%for a=PTXu:Nfoil*i
-  %  TXu(a)=(1-TEP(i))
-%end
+    TXl=TXu;
+
 %end
 
 uTP=zeros(1,Na*Nf);
@@ -488,15 +397,16 @@ end
     end
 
    %%%%%%%%%%%%%%%% surface airfoil front side
-   
-taf=Nf-(round((Nf)*TE*2.5)+1);  %
-Ntaf=(round((Nf)*TE*2.5)+1);
+
+taf=Nf-(round((Nf)*0.3)+1);  %
+Ntaf=(round((Nf)*0.3)+1);   
  ptafu=[];
  ptafl=[];
 for i=1:Na
     ptafu(i)=Nf+(i-1)*2*(Nf-1)-Ntaf;
     ptafl(i)=Nf+(i-1)*2*(Nf-1)+Ntaf;  
 end   
+
 %%
 %ltaf 
 
@@ -857,6 +767,8 @@ end
 
 y1=round(fT/2)+b;
 
+if DM==1
+
 % yan yüzeyler
 fprintf(fid,'Line Loop(%i) = {%i,%i,%i,%i,%i,%i};\r\n',y1+1,1,2,3,4,5,6);
 %fprintf(fid,'Line Loop(%i) = {%i,%i};\r\n',y1+1,s7+1,s7+2);
@@ -870,9 +782,12 @@ else
 fprintf(fid,'Line Loop(%i) = {%i,%i,%i,%i,%i,%i};\r\n',y1+2,s8+3,s8+4,s8+5,s8+8,s8+9,s8+10);
 fprintf(fid,'Plane Surface(%i) = {%i};\r\n',y1+2,y1+2);    
 end
-
-%Ntaf trailing edge  arası 
 y2=y1+2;
+else
+  y2=y1  
+end
+%Ntaf trailing edge  arası 
+
 %2 kesikli çizgi
 for i=1:fT
 cc=i*(L0)+1;
