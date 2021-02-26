@@ -4,8 +4,8 @@ DM=0; % if 3d mesh =1 ,0 means surface mesh
 Nfoil=200;% number of point to built airfoil base shape
 Nf=Nfoil+1;
 dbeta=1/Nfoil;
-LE=0.1;  %LEADING EDGE MODIFICATION  LENGHT  
-fLl = 3; %frequency
+LE=0;  %LEADING EDGE MODIFICATION  LENGHT  
+fLl = 0; %frequency
 Nhp=300; % 3d için katman sayısı
 TP=1;
 AL=1;
@@ -16,7 +16,7 @@ Nw=0;
 TE=0;  %TRAILING EDGE MODIFICATION  LENGHT  
 fT=10;
 Rw=0.125;
-wtp=0.9;  %taper
+wtp=1;  %taper
 WXA=10;
 WYA=10;
 fL = fT;
@@ -137,11 +137,9 @@ ru=zeros(1,Yu-1);
 
 for c=1:Na%NZ-1   %UPPER SURFACE MODIFIED
 stb=LEP(c); %extent max. span of tubcle
-beta=0;
-if stb==0
 
-   ru(g)=x(g);
-  
+if stb==0
+   ru(1:Yu-1)=x(1:Yu-1);
 else
 dbu=(stb+x(Yu-1))/(Yu-2);
 beta=0;
@@ -166,7 +164,7 @@ for c=1:Na %NZ-1
 beta=0;
 if stb==0
 
-   rl(g)=x(g);
+  rl(1:Yl-1)=x(1:Yl-1);
 
 else
 dbl=(stb+x(Yl-1))/(Yl-2);
